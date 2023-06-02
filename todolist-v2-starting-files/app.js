@@ -24,20 +24,25 @@ const Item = mongoose.model("Item", itemsSchema);
 
 //default 3 items
 const item1 = new Item({
-  name: "Item111111"
+  name: "Welcome to your todolist!"
 });
 
 const item2 = new Item({
-  name: "Item22222"
+  name: "Hit the + button to add a new item."
 });
 
 const item3 = new Item({
-  name: "Item33333"
+  name: "<-- Hit this to delete an item."
 });
 
 const defaultItems = [item1, item2, item3];
 
+const listSchema = {
+  name: String,
+  items: [itemsSchema]
+};
 
+const List = mongoose.model("List", listSchema);
 
 app.get("/", function (req, res) {
   Item.find()
@@ -68,13 +73,26 @@ app.get("/", function (req, res) {
 app.post("/", function (req, res) {
 
   const itemName = req.body.newItem;
+  const listName = req.body.list;
 
   const item = new Item({
     name: itemName
   });
 
-  item.save();
-  res.redirect("/")
+  if (listName === "Today") {
+    item.save();
+    res.redirect("/")
+  } else {
+    List.findOne({ name: listName })
+      .then(foundList => {
+        foundList.items.push(item);
+        foundList.save();
+        res.redirect("/" + listName);
+      }).catch(error => {
+        console.log("Error deleting item:", error);
+      });
+  }
+
 
 });
 
@@ -98,9 +116,43 @@ app.post("/delete", function (req, res) {
     });
 });
 
-app.get("/work", function (req, res) {
-  res.render("list", { listTitle: "Work List", newListItems: workItems });
+
+//自定义列表
+app.get("/:customListName", function (req, res) {
+  const customListName = req.params.customListName;
+
+  List.findOne({ name: customListName })
+    .then(foundList => {
+      if (foundList) {
+        console.log("exist");
+        //显示list
+        res.render("list", { listTitle: foundList.name, newListItems: foundList.items });
+      } else {
+        console.log("no exist");
+
+        const list = new List({
+          name: customListName,
+          items: defaultItems
+        });
+        list.save()
+          .then(savedList => {
+            console.log("List saved:", savedList);
+            // 处理保存成功的逻辑
+          })
+          .catch(error => {
+            console.log("Error saving list:", error);
+            // 处理保存失败的逻辑
+          });
+        //重定向至新的页面
+        res.redirect("/" + customListName);
+      }
+    })
+    .catch(error => {
+      console.log("Error finding list:", error);
+      res.status(500).send("Error finding list");
+    });
 });
+
 
 app.get("/about", function (req, res) {
   res.render("about");
