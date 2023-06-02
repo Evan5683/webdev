@@ -74,8 +74,28 @@ app.post("/", function (req, res) {
   });
 
   item.save();
+  res.redirect("/")
+
+});
 
 
+app.post("/delete", function (req, res) {
+  const deleteItemId = req.body.checkbox; // 修改变量名为 deleteItemId
+  console.log(deleteItemId)
+  Item.findByIdAndRemove(deleteItemId)
+    .then(deletedItemId => {
+      if (deletedItemId) {
+        console.log("Success delete:", deletedItemId);
+        res.redirect("/");
+      } else {
+        console.log("Item not found:", deleteItemId);
+      }
+
+    })
+    .catch(error => {
+      console.log("Error deleting item:", error);
+      res.status(500).send("Error deleting item");
+    });
 });
 
 app.get("/work", function (req, res) {
