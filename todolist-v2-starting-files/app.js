@@ -19,8 +19,10 @@ const itemsSchema = {
   name: String
 };
 
+//
 const Item = mongoose.model("Item", itemsSchema);
 
+//default 3 items
 const item1 = new Item({
   name: "Item111111"
 });
@@ -65,7 +67,13 @@ app.get("/", function (req, res) {
 
 app.post("/", function (req, res) {
 
-  const item = req.body.newItem;
+  const itemName = req.body.newItem;
+
+  const item = new Item({
+    name: itemName
+  });
+
+  item.save();
 
 
 });
