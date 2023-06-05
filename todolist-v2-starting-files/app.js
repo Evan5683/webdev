@@ -3,7 +3,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-
+const _ = require("lodash")
 
 const app = express();
 
@@ -99,27 +99,49 @@ app.post("/", function (req, res) {
 
 app.post("/delete", function (req, res) {
   const deleteItemId = req.body.checkbox; // 修改变量名为 deleteItemId
-  console.log(deleteItemId)
-  Item.findByIdAndRemove(deleteItemId)
-    .then(deletedItemId => {
-      if (deletedItemId) {
-        console.log("Success delete:", deletedItemId);
-        res.redirect("/");
-      } else {
-        console.log("Item not found:", deleteItemId);
-      }
+  const listName = req.body.listName;
 
-    })
-    .catch(error => {
-      console.log("Error deleting item:", error);
-      res.status(500).send("Error deleting item");
-    });
+  if (listName === "Today") {
+    console.log(deleteItemId)
+    Item.findByIdAndRemove(deleteItemId)
+      .then(deletedItemId => {
+        if (deletedItemId) {
+          console.log("Success delete:", deletedItemId);
+          res.redirect("/");
+        } else {
+          console.log("Item not found:", deleteItemId);
+        }
+
+      })
+      .catch(error => {
+        console.log("Error deleting item:", error);
+        res.status(500).send("Error deleting item");
+      });
+
+  } else {
+    List.findOneAndUpdate({ name: listName }, { $pull: { items: { _id: deleteItemId } } })
+      .then(foundList => {
+        if (foundList) {
+          res.redirect("/" + listName);
+        } else {
+          // 处理未找到列表的逻辑
+        }
+      })
+      .catch(error => {
+        console.log("Error deleting item:", error);
+        res.status(500).send("Error deleting item");
+      });
+
+
+  }
+
+
 });
 
 
 //自定义列表
 app.get("/:customListName", function (req, res) {
-  const customListName = req.params.customListName;
+  const customListName = _.capitalize(req.params.customListName);
 
   List.findOne({ name: customListName })
     .then(foundList => {
