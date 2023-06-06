@@ -12,7 +12,7 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-mongoose.connect("mongodb://localhost:27017/todolistDB", { useNewUrlParser: true });
+mongoose.connect("mongodb+srv://admin:admin123456@cluster0.ghlbfom.mongodb.net/todolistDB", { useNewUrlParser: true });
 
 // item schema
 const itemsSchema = {
@@ -146,11 +146,11 @@ app.get("/:customListName", function (req, res) {
   List.findOne({ name: customListName })
     .then(foundList => {
       if (foundList) {
-        console.log("exist");
+        console.log("list exist");
         //显示list
         res.render("list", { listTitle: foundList.name, newListItems: foundList.items });
       } else {
-        console.log("no exist");
+        console.log("list no exist");
 
         const list = new List({
           name: customListName,
@@ -180,6 +180,12 @@ app.get("/about", function (req, res) {
   res.render("about");
 });
 
-app.listen(3000, function () {
-  console.log("Server started on port 3000");
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 3000;
+}
+
+
+app.listen(port, function () {
+  console.log("Server started");
 });
